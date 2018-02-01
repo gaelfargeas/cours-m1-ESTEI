@@ -44,7 +44,7 @@ public class MyFTP implements Runnable {
 
 				lue = depuisclient.readLine();
 				System.out.println(lue);
-				
+
 				if (lue.startsWith("ls"))
 				{
 					versclient.println("ls");
@@ -57,27 +57,33 @@ public class MyFTP implements Runnable {
 				}
 				else if (lue.startsWith("cd"))
 				{
-						versclient.println("cd");
-						st = new StringTokenizer(lue);
-						st.nextToken();
-						String path = (f.getCanonicalPath() + "\\" + st.nextToken() );
-						System.out.println(path);
-						
-						 f2 = new File(path);
-						 //verrifie que se qu'on a mis apres cd est un dossier
-						if (f2.isDirectory()) {
-							f=new File(path);
-							versclient.println("..");
-							for (int i = 0 ; i< f.list().length ; i ++)
-							{
-								versclient.println(f.list()[i]);
-							}
-						} else if (f2.isFile())
+					versclient.println("cd");
+					st = new StringTokenizer(lue);
+					st.nextToken();
+					String str = "";
+					str = st.nextToken();
+					while(st.hasMoreTokens())
+					{
+						str = (str +" "+ st.nextToken() );
+					}
+					String path = (f.getCanonicalPath() + "\\" + str );
+					System.out.println(path);
+
+					f2 = new File(path);
+					//verrifie que se qu'on a mis apres cd est un dossier
+					if (f2.isDirectory()) {
+						f=new File(path);
+						versclient.println("..");
+						for (int i = 0 ; i< f.list().length ; i ++)
 						{
-							versclient.println("ce n'est pas un dossier");
-							
+							versclient.println(f.list()[i]);
 						}
-						
+					} else if (f2.isFile())
+					{
+						versclient.println("ce n'est pas un dossier");
+
+					}
+
 				}
 				else if (lue.startsWith("get"))
 				{
@@ -99,8 +105,8 @@ public class MyFTP implements Runnable {
 						}
 						br.close();
 					}
-					
-					
+
+					ligne = "";
 				}
 				else if (lue.startsWith("put"))
 				{
@@ -110,27 +116,33 @@ public class MyFTP implements Runnable {
 					String path = (f.getCanonicalPath() + "\\" + st.nextToken() );
 					PrintWriter pr = new PrintWriter(new FileOutputStream(path));
 					String ligne ;
-					while ( ( ligne = depuisclient.readLine() ) != null )
+					
+					ligne = depuisclient.readLine();
+					while ( !ligne.startsWith("<EOF>") )
 					{
-					pr.write(ligne);
+						
+						System.out.println("reçus du client : "+ligne);
+						pr.write(ligne +"\n");
+						ligne = depuisclient.readLine();
 					}
-					
-					pr.close();		
-					
-					
+					System.out.println("sortie du while");
+					pr.close();
+					ligne = "";
+
+
 				}
 				else if (lue.startsWith("quit"))
 				{
 					stop() ;
 					fin=true;
 				}
-				
+
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
 			System.out.println(e.toString());
 		}
-		
+
 	}
 
 	public void stop() 

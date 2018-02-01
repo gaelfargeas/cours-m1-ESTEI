@@ -18,7 +18,7 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 
 	List liste ;
 	TextField tf ;
-	Button bpco;
+	Button bpco ,savetoserver ,savetoclient;
 	boolean isco=false;
 
 	boolean isls = false;
@@ -37,17 +37,28 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 		portserveur = port ;
 		addWindowListener(new Fermeture());
 
-
+		//==========zone au top============================
 		Panel p = new Panel();
-		p.setLayout(new GridLayout(1, 2));
-		//crea le bouton
+		p.setLayout(new GridLayout(2, 2));
+		//crée les boutons
 		bpco= new Button("connect");
 		bpco.addActionListener(this);
+
+		savetoclient= new Button("save to client");
+		savetoclient.addActionListener(this);
+		savetoclient.setEnabled(false);
+
+		savetoserver= new Button("save to server");
+		savetoserver.addActionListener(this);
+		savetoserver.setEnabled(false);
+
 		//crée une zone de texte
 		tf = new TextField();
 		tf.setEditable(false);
 		p.add(tf);
 		p.add(bpco);
+		p.add(savetoclient);
+		p.add(savetoserver);
 		add(p,BorderLayout.NORTH);
 		//rajoute mon text area
 		ta = new TextArea();
@@ -108,7 +119,7 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 					//recupere le message suivant (message apres cd)
 					ligne= depuisServeur.readLine();
 
-					System.out.println(ligne);
+					System.out.println("message reçus du serveur "+ligne);
 
 
 					//jsp pk les if marche pas et les case marche avec les strings
@@ -118,14 +129,16 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 					case "ce n'est pas un dossier":
 						//on le recupere et on l'affiche sur le text area
 						versServer.println("get " + liste.getSelectedItem());
-						System.out.println("envoyer au serveur : get" + liste.getSelectedItem() );
+						System.out.println("envoyer au serveur : get " + liste.getSelectedItem() );
 						isls=false;
 						iscd=false;
 						isget=false;
+						ta.setText("");
 						//reset les variable bool car le serveur va envoyer get
 						break;
 
 					default:
+						tf.setText("vous ete dans le dossier : "+liste.getSelectedItem());
 						break;
 					}
 
@@ -137,8 +150,25 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 					iscd=false;
 					isget=true;
 					//recupere le message suivant (message apres get)
-					ligne= depuisServeur.readLine();
+					//ligne= depuisServeur.readLine();
 
+					break;
+				case "put" :
+
+					isls=false;
+					iscd=false;
+					isget=false;
+
+					System.out.println("envoyer au serveur " +ta.getText());
+					versServer.println(ta.getText());
+					versServer.println("<EOF>");
+
+					break;
+				case "":
+					//si on reçois un message vide on reset tout
+					iscd = false;
+					isls = false;
+					isget = false;
 					break;
 				default:
 					break;
@@ -153,6 +183,7 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 				{
 					//clear la liste
 					liste.clear();
+					liste.addItem(ligne);
 					//passe en mode ls pour recuperer les nouveau repertoir et fichier
 					iscd=false;
 					isls=true;
@@ -160,53 +191,16 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 				}
 				else if (isget == true)
 				{
-					ta.append(ligne + "\n");
-				}
+					switch (ligne) {
+					case "get":
 
+						break;
 
-
-
-
-
-
-				/*switch (ligne) {
-				case "":
-					fin = true;
-					break;
-				case "cd":
-					liste.removeAll();
-					//je sort pas de la boucle 
-
-					while( (ligne = depuisServeur.readLine()) != null)
-					{
-						liste.addItem(ligne);
-					}
-					System.out.println("sortie de cd ");
-					break;
-				case "ls":
-					liste.removeAll();
-					ligne= depuisServeur.readLine();
-					while( ligne != null)
-					{
-						ligne= depuisServeur.readLine();
-						liste.addItem(ligne);
-						System.out.println(ligne);
-					}
-					System.out.println("sortie de ls");
-					break;
-				case "get":
-					liste.removeAll();
-					ligne= depuisServeur.readLine();
-					while( ligne != null)
-					{
-						ligne = depuisServeur.readLine();
+					default:
 						ta.append(ligne + "\n");
+						break;
 					}
-					break;
-				default:
-					ligne ="" ;
-					break;
-				}*/
+				}
 			}	
 			System.out.println("sortie du while");
 			disconnect();
@@ -244,13 +238,21 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 	{
 		try {
 			System.out.println("fonction disconected");
+
 			versServer.println("quit");
+
 			sk.close();
+
 			isco=false;
+			//reset les bouton et les zone de text (liste et texte field et texte area
 			bpco.setLabel("connect");
 			ta.setText("");
 			liste.removeAll();
+
 			tf.setText("deconnecte du serveur");
+			savetoclient.setEnabled(false);
+			savetoserver.setEnabled(false);
+
 		} catch (Exception e) {
 			// TODO: handle exception
 			System.out.println(e.toString());
@@ -261,6 +263,7 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 	public void itemStateChanged(ItemEvent arg0) {
 		// TODO Auto-generated method stub
 		versServer.println("cd " + liste.getSelectedItem());
+		System.out.println("envoyer au serveur cd "+liste.getSelectedItem() );
 
 	}
 	@Override
@@ -277,6 +280,8 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 				bpco.setLabel("Disconnect");
 				isco=true;
 				System.out.println("isco = "+isco);
+				savetoclient.setEnabled(true);
+				savetoserver.setEnabled(true);
 
 			}
 			else if (isco == true)
@@ -285,24 +290,48 @@ public class FTP_client extends Frame implements Runnable , ActionListener, Item
 				{
 					versServer.println("quit");
 
-					if (sk.isClosed())
-					{
-						liste.removeAll();
-						ta.setText("");
-						System.out.println("liste et text area clean");
-						process.stop();
-						bpco.setLabel("connect");
-					}
-
 				} catch (Exception e) {
 					// TODO: handle exception
 					System.out.println(e.toString());
 				}
+			}
+		}
 
+		if (arg0.getSource().equals(savetoclient))
+		{
 
+			try {
+				FileDialog fd = new FileDialog(this, "Sauvegarder", FileDialog.SAVE);
+				fd.show();
+
+				PrintWriter pr = new PrintWriter(new FileOutputStream( (fd.getDirectory()+ "\\" + fd.getFile( ) )));
+				pr.write(ta.getText());
+				pr.close();
+			} catch (Exception e) {
+				System.out.println(e.toString());
 			}
 
 		}
+		if (arg0.getSource().equals(savetoserver))
+		{
+			try {
+				//renvoie ce qui est dans le textarea au serveur avec un put devant
+				if (ta.getText()!=null)
+				{
+					System.out.println("envoy au serveur : "+ liste.getSelectedItem());
+					versServer.println("put " + liste.getSelectedItem() );
+
+				}else
+				{
+					System.out.println("erreur sur l'envoie du fichier au serveur");
+					tf.setText("erreur sur l'envoie du fichier au serveur");
+				}
+
+			} catch (Exception e) {
+				System.out.println(e.toString());
+			}
+		}
+
 	}
 
 
