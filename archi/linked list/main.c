@@ -20,7 +20,7 @@ List* init_List()
 
     printf("======== INIT START ========\n");
 
-    //crée la liste
+    //crÃ©e la liste
     List *head = (List *) malloc(sizeof(List)) ;
 
     List *tail = (List *) malloc(sizeof(List)) ;
@@ -85,7 +85,7 @@ void add_element(List *L, char nbr)
         new_element->precedent=NULL;
         new_element->suivant=tmp;
 
-//lie de head a la struct crée precedament
+//lie de head a la struct crÃ©e precedament
         tmp->precedent=new_element;
         tmp = new_element;
         }
@@ -102,7 +102,7 @@ void add_element(List *L, char nbr)
         new_element->suivant=NULL;
         new_element->precedent=tmp;
         new_element->valleur=0;
-        //lie de head a la struct crée precedament
+        //lie de head a la struct crÃ©e precedament
         tmp->suivant=new_element;
         tmp = new_element;
         }
@@ -426,33 +426,44 @@ void delete_list (List *L)
 
 int main()
 {
-    //probleme pas d'uptate auto sur le head et le tail
+    //probleme pas d'update auto sur le head et le tail
+    //create a list
     List *test = init_List();
+    //print the list
     print_List(test);
 
-
+    //get the head of this list
     List *test_head = get_head(test);
+    //get the tail of this list
     List *test_tail = get_tail(test);
-
+    
+    //add element
     add_element(test_head,2);
     add_element(test_tail,2);
+    //print list
     print_List(test);
-
+    
+    //edit element
     edit_element_from_head(test,0,'S');
     edit_element_from_head(test,1,'A');
     edit_element_from_head(test,2,'L');
     edit_element_from_head(test,3,'U');
     edit_element_from_tail(test,1,'T');
     edit_element_from_tail(test,0,'!');
+    //print list
     print_List(test);
-
+    
+    //clear list' data (here is a char)
     reset_List(test);
+    //print list
     print_List(test);
-
+    
+    //delete element
     remove_element_from_head(test,2);
-    //remove_element_from_tail(test,1);
-    edit_element_from_tail(test,2,'L');
+    remove_element_from_tail(test,1);
+    //print
     print_List(test);
+    //delete list
     delete_list(test);
 
     return 0;
